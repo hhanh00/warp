@@ -1,6 +1,6 @@
 [submodule "lwd-warp"]
 	path = lwd-warp
-	url = git@desk:~/lwd-warp
+	url = https://github.com/hhanh00/lwd-warp.git
 [submodule "zcash-warp"]
 	path = zcash-warp
-	url = git@desk:~/zcash-warp
+	url = https://github.com/hhanh00/zcash-warp.git
