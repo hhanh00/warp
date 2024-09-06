@@ -4,7 +4,7 @@
 - Clone and update submodules
 - *Install zcash sapling parameters* (it's done automatically if you 
 have zcashd)
-    - [Spend](https://download.z.cash/downloads/sapling-spend.params])
+    - [Spend](https://download.z.cash/downloads/sapling-spend.params)
     - [Output](https://download.z.cash/downloads/sapling-output.params)
 - Install sqlite3
     - on Ubuntu: `apt-get install libsqlite3-dev`
