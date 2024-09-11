@@ -1,0 +1,7 @@
+db_path="zec.db"
+lwd_url="https://zec.rocks"
+warp_url="http://zebra.zcash-infra.com:8000"
+warp_end_height=2400000
+seed=""
+birth=0
+confirmations=3
