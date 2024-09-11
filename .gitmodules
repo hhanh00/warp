@@ -4,3 +4,6 @@
 [submodule "zcash-warp"]
 	path = zcash-warp
 	url = https://github.com/hhanh00/zcash-warp.git
+[submodule "dart-warp"]
+	path = dart-warp
+	url = https://github.com/hhanh00/dart-warp.git

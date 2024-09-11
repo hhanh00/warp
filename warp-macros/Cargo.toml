@@ -11,5 +11,8 @@ repository.workspace = true
 proc-macro = true
 
 [dependencies]
+proc-macro-error = "1.0.4"
+proc-macro2 = "1.0.86"
 quote = { version = "1.0.37", features = [ "proc-macro" ] }
+regex = "1.10.6"
 syn = { version = "2.0.77", features = [ "full" ] }
