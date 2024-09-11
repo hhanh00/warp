@@ -1,9 +1,11 @@
 [workspace]
 members = [
     "zcash-warp",
-    "lwd-warp"
+    "lwd-warp",
+    "warp-macros"
 ]
 exclude = [
+    "librustzcash",
     "orchard"
 ]
 resolver = "2"
