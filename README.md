@@ -16,8 +16,7 @@ can simply delete both `build.rs` and retry.
 `cargo b -r`
 
 ## Configure
-- Edit `App.toml` and input your seed phrase & birth height.
-
+- Edit `App.toml` and input your seed phrase & birth height. Make sure a copy of this file is located in the `warp` folder.
 ## Usage
 Run `zcash-warp`
 
