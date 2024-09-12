@@ -4,18 +4,16 @@ use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use syn::{
-    parse_macro_input, parse_quote, punctuated::Punctuated, FnArg, GenericArgument, Ident, ItemFn,
-    Meta, Pat, PathArguments, ReturnType, Signature, Type,
+    parse_macro_input, parse_quote, FnArg, GenericArgument, Ident, ItemFn,
+    Pat, PathArguments, ReturnType, Signature, Type,
 };
 
 #[proc_macro_attribute]
 #[proc_macro_error]
-pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attr = parse_macro_input!(attr with Punctuated<Meta, syn::Token![,]>::parse_terminated);
-    let asyn = Ident::new("asyn", Span::call_site());
-    let is_async = attr.iter().any(|a| a.path().get_ident() == Some(&asyn));
+pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     let sig = &input.sig;
+    let is_async = sig.asyncness.is_some();
 
     let vec_reg = regex::Regex::new(r"Vec < (\w+) >").unwrap();
     let Signature {
@@ -51,9 +49,14 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
                 map_result(res)
             }
         }
-        "String" => quote! {
-            map_result_string(res)
-        },
+        "String" => {
+            c_result_type = parse_quote! {
+                *mut c_char
+            };
+            quote! {
+                map_result_string(res)
+            }
+        }
         "Vec < u8 >" => {
             c_result_type = parse_quote! {
                 *const u8
@@ -113,14 +116,17 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let ItemFn { vis, block, .. } = &input;
     let mut wrapped_fnargs = vec![];
-    let mut str_convs = vec![];
-    let mut bytes_convs = vec![];
+    let mut convs = vec![];
     let mut has_network = false;
     let mut has_connection = false;
+    let mut mut_connection = false;
     let mut has_client = false;
     for input in inputs.iter() {
         if let FnArg::Typed(pat) = input {
             if let Pat::Ident(param) = pat.pat.as_ref() {
+                let p = pat.ty.as_ref();
+                let type_name = quote! { #p }.to_string();
+
                 let ident = &param.ident;
                 let name = ident.to_string();
                 match name.as_str() {
@@ -130,6 +136,9 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     "connection" => {
                         has_connection = true;
+                        if type_name == "& mut Connection" {
+                            mut_connection = true;
+                        }
                         continue;
                     }
                     "client" if is_async => {
@@ -138,11 +147,9 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     _ => {}
                 }
-                let p = pat.ty.as_ref();
-                let s = quote! { #p }.to_string();
-                match s.as_str() {
+                match type_name.as_str() {
                     "& str" => {
-                        str_convs.push(quote! {
+                        convs.push(quote! {
                             let #ident = unsafe { CStr::from_ptr(#ident).to_string_lossy() };
                             let #ident = &#ident;
                         });
@@ -153,23 +160,47 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
                         continue;
                     }
                     "& [u8]" => {
-                        bytes_convs.push(quote! {
+                        convs.push(quote! {
                             let #ident = unsafe {
-                                let ptr_len = #ident as *mut u32;
-                                let len = *ptr_len as usize;
-                                let ptr_data = value.offset(4);
-                                Vec::<u8>::from_raw_parts(ptr_data, len, len)
+                                let ptr_data = #ident.value;
+                                let len = #ident.len as usize;
+                                let data = Vec::<u8>::from_raw_parts(ptr_data, len, len);
+                                data
                             };
                             let #ident = &#ident[..];
                         });
                         let input: FnArg = parse_quote! {
-                            #ident: *mut u8
+                            #ident: CParam
                         };
                         wrapped_fnargs.push(input);
                         continue;
                     }
-                    _ => {
+                    _ if type_name.ends_with("T") => {
+                        let tpe = Ident::new(
+                            type_name
+                                .strip_suffix("T")
+                                .unwrap()
+                                .strip_prefix("& ")
+                                .unwrap(),
+                            Span::call_site(),
+                        );
+                        convs.push(quote! {
+                            let #ident = unsafe {
+                                let ptr_data = #ident.value;
+                                let len = #ident.len as usize;
+                                let data = Vec::<u8>::from_raw_parts(ptr_data, len, len);
+                                let object = flatbuffers::root::<#tpe>(&data).unwrap();
+                                object.unpack()
+                            };
+                            let #ident = &#ident;
+                        });
+                        let input: FnArg = parse_quote! {
+                            #ident: CParam
+                        };
+                        wrapped_fnargs.push(input);
+                        continue;
                     }
+                    _ => {}
                 }
             }
         }
@@ -178,14 +209,21 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let network = if has_network {
         quote! {
-            let network = &coin.network;
+            let network = &coin.network.clone();
         }
     } else {
         quote! {}
     };
     let connection = if has_connection {
-        quote! {
-            let connection = &coin.connection()?;
+        if mut_connection {
+            quote! {
+                let mut connection = coin.connection()?;
+                let connection: &mut rusqlite::Connection = &mut connection;
+            }
+        } else {
+            quote! {
+                let connection = &coin.connection()?;
+            }
         }
     } else {
         quote! {}
@@ -220,12 +258,14 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
             #[tokio::main]
             pub async extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
                 let res = async {
-                    let coin = COINS[coin as usize].lock();
+                    let coin = { 
+                        let c = COINS[coin as usize].lock();
+                        c.clone()
+                    };
                     #network
                     #connection
                     #client
-                    #(#str_convs),*
-                    #(#bytes_convs),*
+                    #(#convs)*
                     #ident(#(#args),*).await
                 };
                 let res = res.await;
@@ -239,12 +279,14 @@ pub fn c_export(attr: TokenStream, item: TokenStream) -> TokenStream {
             #[no_mangle]
             pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
                 let res = || {
-                    let coin = COINS[coin as usize].lock();
+                    let coin = { 
+                        let c = COINS[coin as usize].lock();
+                        c.clone()
+                    };
                     #network
                     #connection
                     #client
-                    #(#str_convs),*
-                    #(#bytes_convs),*
+                    #(#convs)*
                     #ident(#(#args),*)
                 };
                 let res = res();
