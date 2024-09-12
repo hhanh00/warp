@@ -121,6 +121,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut has_connection = false;
     let mut mut_connection = false;
     let mut has_client = false;
+    let mut has_url = false;
     for input in inputs.iter() {
         if let FnArg::Typed(pat) = input {
             if let Pat::Ident(param) = pat.pat.as_ref() {
@@ -132,6 +133,10 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 match name.as_str() {
                     "network" => {
                         has_network = true;
+                        continue;
+                    }
+                    "url" => {
+                        has_url = true;
                         continue;
                     }
                     "connection" => {
@@ -214,6 +219,13 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     } else {
         quote! {}
     };
+    let url = if has_url {
+        quote! {
+            let url = coin.url.clone();
+        }
+    } else {
+        quote! {}
+    };
     let connection = if has_connection {
         if mut_connection {
             quote! {
@@ -264,6 +276,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     };
                     #network
                     #connection
+                    #url
                     #client
                     #(#convs)*
                     #ident(#(#args),*).await
@@ -285,6 +298,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     };
                     #network
                     #connection
+                    #url
                     #client
                     #(#convs)*
                     #ident(#(#args),*)
