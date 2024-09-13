@@ -195,7 +195,9 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                                 let len = #ident.len as usize;
                                 let data = Vec::<u8>::from_raw_parts(ptr_data, len, len);
                                 let object = flatbuffers::root::<#tpe>(&data).unwrap();
-                                object.unpack()
+                                let obj = object.unpack();
+                                tracing::debug!("{:?}", &obj);
+                                obj
                             };
                             let #ident = &#ident;
                         });
