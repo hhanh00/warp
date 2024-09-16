@@ -131,6 +131,9 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 let ident = &param.ident;
                 let name = ident.to_string();
                 match name.as_str() {
+                    "coin" => {
+                        continue;
+                    }
                     "network" => {
                         has_network = true;
                         continue;
@@ -216,14 +219,14 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let network = if has_network {
         quote! {
-            let network = &coin.network.clone();
+            let network = &coin_def.network.clone();
         }
     } else {
         quote! {}
     };
     let url = if has_url {
         quote! {
-            let url = coin.url.clone();
+            let url = coin_def.config.lwd_url.clone().unwrap();
         }
     } else {
         quote! {}
@@ -231,12 +234,12 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let connection = if has_connection {
         if mut_connection {
             quote! {
-                let mut connection = coin.connection()?;
+                let mut connection = coin_def.connection()?;
                 let connection: &mut rusqlite::Connection = &mut connection;
             }
         } else {
             quote! {
-                let connection = &coin.connection()?;
+                let connection = &coin_def.connection()?;
             }
         }
     } else {
@@ -244,7 +247,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     };
     let client = if has_client {
         quote! {
-            let mut client = coin.connect_lwd().await?;
+            let mut client = coin_def.connect_lwd().await?;
             let client = &mut client;
         }
     } else {
@@ -272,7 +275,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
             #[tokio::main]
             pub async extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
                 let res = async {
-                    let coin = { 
+                    let coin_def = { 
                         let c = COINS[coin as usize].lock();
                         c.clone()
                     };
@@ -294,7 +297,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
             #[no_mangle]
             pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
                 let res = || {
-                    let coin = { 
+                    let coin_def = { 
                         let c = COINS[coin as usize].lock();
                         c.clone()
                     };
