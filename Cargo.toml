@@ -42,13 +42,14 @@ serde_with = "3.9.0"
 bincode = "1.3.3"
 rand = "0.8.4"
 chrono = "0.4.38"
+itertools = "0.13.0"
 
 clap = { version = "4.5.16", features = ["derive"] }
 clap-repl = "0.3.0"
 console = "0.15.8"
 
 zcash_keys = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e", features = ["sapling", "orchard", "test-dependencies"] }
-zcash_protocol = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e" }
+zcash_protocol = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e", features = ["local-consensus"] }
 zcash_client_backend = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e", features = [ "transparent-inputs", "orchard" ] }
 zcash_primitives = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e", features = [ "transparent-inputs" ] }
 zcash_proofs = { git = "https://github.com/hhanh00/librustzcash.git", rev = "bc5c4b2e" }

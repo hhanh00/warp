@@ -4684,6 +4684,7 @@ dependencies = [
  "halo2_proofs",
  "hex",
  "incrementalmerkletree",
+ "itertools 0.13.0",
  "jubjub",
  "lazy_static",
  "orchard",
