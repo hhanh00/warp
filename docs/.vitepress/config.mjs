@@ -1,8 +1,8 @@
 import footnote from 'markdown-it-footnote'
-import { defineConfig } from 'vitepress'
+import { withMermaid } from "vitepress-plugin-mermaid"
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid({
   title: "Warp Zcash Wallet Library",
   description: "A High Performance Wallet Synchronization and Transaction Builder for Zcash",
   base: '/warp/',
