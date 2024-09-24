@@ -1,0 +1,6 @@
+target/
+.DS_Store
+*.db
+App.toml
+node_modules/
+docs/.vitepress/cache

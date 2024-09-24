@@ -1,0 +1,3 @@
+# About Zcash
+
+Under construction
