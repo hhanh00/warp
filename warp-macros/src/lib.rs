@@ -76,7 +76,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     let data = res.map(|res| {
                         let mut builder = FlatBufferBuilder::new();
                         let mut os = Vec::new();
-                        for v in res.iter() {
+                        for v in res.iter().rev() {
                             let o = v.pack(&mut builder);
                             builder.push(o);
                             os.push(o);
