@@ -117,6 +117,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let ItemFn { vis, block, .. } = &input;
     let mut wrapped_fnargs = vec![];
     let mut convs = vec![];
+    let mut has_coin = false;
     let mut has_network = false;
     let mut has_connection = false;
     let mut mut_connection = false;
@@ -132,6 +133,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 let name = ident.to_string();
                 match name.as_str() {
                     "coin" => {
+                        has_coin = true;
                         continue;
                     }
                     "network" => {
@@ -217,6 +219,14 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
         wrapped_fnargs.push(input.clone());
     }
 
+    let coin = if has_coin {
+        quote! {
+            let coin = &coin_def.clone();
+        }
+    } else {
+        quote! {}
+    };
+
     let network = if has_network {
         quote! {
             let network = &coin_def.network.clone();
@@ -279,6 +289,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         let c = COINS[coin as usize].lock();
                         c.clone()
                     };
+                    #coin
                     #network
                     #connection
                     #url
@@ -301,6 +312,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         let c = COINS[coin as usize].lock();
                         c.clone()
                     };
+                    #coin
                     #network
                     #connection
                     #url
@@ -313,7 +325,6 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
             }
 
             #vis fn #ident(#inputs) #output #block
-
         }
     };
 

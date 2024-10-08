@@ -4836,6 +4836,7 @@ dependencies = [
  "tiny-bip39",
  "tiny-hderive",
  "tokio",
+ "tokio-stream",
  "tonic",
  "tonic-build 0.12.2",
  "tracing",
