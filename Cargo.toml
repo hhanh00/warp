@@ -26,6 +26,8 @@ tracing-subscriber = { version = "0.3.18", features = [ "env-filter" ] }
 tokio = { version = "1.40", features = ["rt-multi-thread"] }
 tokio-stream = "0.1.15"
 tonic = { version = "0.12", features = ["tls", "tls-native-roots", "tls-webpki-roots"] }
+tower = "0.4.13"
+hyper = "1.4.1"
 prost = "0.13"
 hex = { version = "0.4", features = ["serde"] }
 fpdec = "0.10.3"
