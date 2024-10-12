@@ -2,4 +2,4 @@ target/
 .DS_Store
 *.db
 App.toml
-
+flutter-warp/
