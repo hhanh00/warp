@@ -7,6 +7,6 @@
 [submodule "dart-warp"]
 	path = dart-warp
 	url = https://github.com/hhanh00/dart-warp.git
-[submodule "ywallet"]
-	path = ywallet
-	url = git@github.com:hhanh00/ywallet.git
+[submodule "zkool"]
+	path = zkool
+	url = https://github.com/hhanh00/zkool.git
