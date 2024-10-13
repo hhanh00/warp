@@ -11,7 +11,19 @@ hero:
       link: /tutorial/
     - theme: alt
       text: About Zcash
-      link: /about-zcash
+      link: /about-zcash/
+    - theme: alt
+      text: ZKool
+      link: /zkool/
+    - theme: alt
+      text: Coin Voting
+      link: /coin_voting/
+    - theme: alt
+      text: For Experts
+      link: /expert/
+    - theme: alt
+      text: Test Cases
+      link: /tests/
 
 features:
   - title: Warp (2) Synchronization

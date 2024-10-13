@@ -15,7 +15,12 @@ export default withMermaid({
     sidebar: [
       {
         text: 'About Zcash',
-        link: '/about-zcash/',
+        collapsible: true,
+        collapsed: true,
+        items: [
+          { text: 'What is Zcash?', link: '/about-zcash/' },
+          { text: 'What can you use it for?', link: '/about-zcash/usage' },
+        ]
       },
       {
         text: 'Tutorial',
@@ -41,7 +46,46 @@ export default withMermaid({
           { text: 'Max transfer', link: '/tutorial/max' },
           { text: 'Conclusion', link: '/tutorial/conclusion' },
         ]
-      }
+      },
+      {
+        text: 'ZKool',
+        collapsible: true,
+        collapsed: true,
+        items: [
+          { text: 'News', link: '/zkool/' },
+          { text: 'Accounts', link: '/zkool/accounts' },
+        ]
+      },
+      {
+        text: 'Coin Voting',
+        collapsible: true,
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/coin_voting/' },
+          { text: 'Mindmap', link: '/coin_voting/mindmap' },
+          { text: 'User Stories', link: '/coin_voting/user_stories' },
+        ]
+      },
+      {
+        text: 'Expert',
+        collapsible: true,
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/expert/' },
+          { text: 'Coin Voting', link: '/expert/coinvoting' },
+          { text: 'Mindmap', link: '/expert/mindmap' },
+        ]
+      },
+      {
+        text: 'Test Cases',
+        collapsible: true,
+        collapsed: true,
+        items: [
+          { text: 'Setup', link: '/tests/' },
+          { text: 'Accounts', link: '/tests/accounts/' },
+          { text: 'Test Areas', link: '/tests/areas/' },
+        ]
+      },
     ],
 
     socialLinks: [
