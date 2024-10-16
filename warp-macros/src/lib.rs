@@ -270,21 +270,20 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let res = if is_async {
         quote! {
             #[no_mangle]
-            #[tokio::main]
-            pub async extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
-                let res = async {
-                    let coin_def = { 
-                        let c = COINS[coin as usize].lock();
-                        c.clone()
-                    };
+            pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
+                let coin_def = {
+                    let c = COINS[coin as usize].lock();
+                    c.clone()
+                };
+                let runtime = coin_def.runtime.0.as_ref().unwrap();
+                let res = runtime.block_on(async {
                     #coin
                     #network
                     #connection
                     #client
                     #(#convs)*
                     #ident(#(#args),*).await
-                };
-                let res = res.await;
+                });
                 #map_result
             }
 
@@ -295,7 +294,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
             #[no_mangle]
             pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
                 let res = || {
-                    let coin_def = { 
+                    let coin_def = {
                         let c = COINS[coin as usize].lock();
                         c.clone()
                     };
