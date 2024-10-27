@@ -4,8 +4,8 @@ use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use syn::{
-    parse_macro_input, parse_quote, FnArg, GenericArgument, Ident, ItemFn,
-    Pat, PathArguments, ReturnType, Signature, Type,
+    parse_macro_input, parse_quote, FnArg, GenericArgument, Ident, ItemFn, Pat, PathArguments,
+    ReturnType, Signature, Type,
 };
 
 #[proc_macro_attribute]
@@ -46,15 +46,15 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
             };
             quote! {
                 let res = res.map(|_| 0u8);
-                map_result(res)
+                crate::ffi::map_result(res)
             }
         }
         "String" => {
             c_result_type = parse_quote! {
-                *mut c_char
+                *mut std::ffi::c_char
             };
             quote! {
-                map_result_string(res)
+                crate::ffi::map_result_string(res)
             }
         }
         "Vec < u8 >" => {
@@ -62,7 +62,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 *const u8
             };
             quote! {
-                map_result_bytes(res)
+                crate::ffi::map_result_bytes(res)
             }
         }
         _ => {
@@ -74,23 +74,23 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 };
                 quote! {
                     let data = res.map(|res| {
-                        let mut builder = FlatBufferBuilder::new();
+                        let mut builder = flatbuffers::FlatBufferBuilder::new();
                         let mut os = Vec::new();
                         for v in res.iter().rev() {
                             let o = v.pack(&mut builder);
                             builder.push(o);
                             os.push(o);
                         }
-                        builder.start_vector::<WIPOffset<#ty>>(res.len());
+                        builder.start_vector::<flatbuffers::WIPOffset<#ty>>(res.len());
                         for o in os {
                             builder.push(o);
                         }
-                        let o = builder.end_vector::<WIPOffset<#ty>>(res.len());
+                        let o = builder.end_vector::<flatbuffers::WIPOffset<#ty>>(res.len());
                         builder.finish(o, None);
                         let data = builder.finished_data();
                         data.to_vec()
                     });
-                    map_result_bytes(data)
+                    crate::ffi::map_result_bytes(data)
                 }
             } else if result_type_str.ends_with("T") {
                 c_result_type = parse_quote! {
@@ -98,17 +98,17 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 };
                 quote! {
                     let data = res.map(|res| {
-                        let mut builder = FlatBufferBuilder::new();
+                        let mut builder = flatbuffers::FlatBufferBuilder::new();
                         let ret_bytes = res.pack(&mut builder);
                         builder.finish(ret_bytes, None);
                         let data = builder.finished_data().to_vec();
                         data
                     });
-                    map_result_bytes(data)
+                    crate::ffi::map_result_bytes(data)
                 }
             } else {
                 quote! {
-                    map_result(res)
+                    crate::ffi::map_result(res)
                 }
             }
         }
@@ -155,11 +155,11 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 match type_name.as_str() {
                     "& str" => {
                         convs.push(quote! {
-                            let #ident = unsafe { CStr::from_ptr(#ident).to_string_lossy() };
+                            let #ident = unsafe { std::ffi::CStr::from_ptr(#ident).to_string_lossy() };
                             let #ident = &#ident;
                         });
                         let input: FnArg = parse_quote! {
-                            #ident: *mut c_char
+                            #ident: *mut std::ffi::c_char
                         };
                         wrapped_fnargs.push(input);
                         continue;
@@ -175,7 +175,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                             let #ident = &#ident[..];
                         });
                         let input: FnArg = parse_quote! {
-                            #ident: CParam
+                            #ident: crate::ffi::CParam
                         };
                         wrapped_fnargs.push(input);
                         continue;
@@ -202,7 +202,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
                             let #ident = &#ident;
                         });
                         let input: FnArg = parse_quote! {
-                            #ident: CParam
+                            #ident: crate::ffi::CParam
                         };
                         wrapped_fnargs.push(input);
                         continue;
@@ -214,6 +214,7 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
         wrapped_fnargs.push(input.clone());
     }
 
+    let has_autoparam = has_coin | has_network | has_connection | mut_connection | has_client;
     let coin = if has_coin {
         quote! {
             let coin = &coin_def.clone();
@@ -267,12 +268,26 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let wrapper = Ident::new(&format!("c_{}", ident), ident.span());
 
-    let res = if is_async {
+    let res = if !has_autoparam {
         quote! {
             #[no_mangle]
-            pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
+            pub extern "C" fn #wrapper(#(#wrapped_fnargs),*) -> crate::ffi::CResult<#c_result_type> {
+                let res = || {
+                    #(#convs)*
+                    #ident(#(#args),*)
+                };
+                let res = res();
+                #map_result
+            }
+
+            #vis fn #ident(#inputs) #output #block
+        }
+    } else if is_async {
+        quote! {
+            #[no_mangle]
+            pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> crate::ffi::CResult<#c_result_type> {
                 let coin_def = {
-                    let c = COINS[coin as usize].lock();
+                    let c = crate::coin::COINS[coin as usize].lock();
                     c.clone()
                 };
                 let runtime = coin_def.runtime.0.as_ref().unwrap();
@@ -292,10 +307,10 @@ pub fn c_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
     } else {
         quote! {
             #[no_mangle]
-            pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> CResult<#c_result_type> {
+            pub extern "C" fn #wrapper(coin: u8, #(#wrapped_fnargs),*) -> crate::ffi::CResult<#c_result_type> {
                 let res = || {
                     let coin_def = {
-                        let c = COINS[coin as usize].lock();
+                        let c = crate::coin::COINS[coin as usize].lock();
                         c.clone()
                     };
                     #coin
