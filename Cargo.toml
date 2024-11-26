@@ -53,14 +53,14 @@ clap = { version = "4.5.16", features = ["derive"] }
 clap-repl = "0.3.0"
 console = "0.15.8"
 
-zcash_keys = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a", features = ["sapling", "orchard", "test-dependencies"] }
-zcash_protocol = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a", features = ["local-consensus"] }
-zcash_client_backend = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a", features = [ "transparent-inputs", "orchard" ] }
-zcash_primitives = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a", features = [ "transparent-inputs" ] }
-zcash_proofs = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a" }
-zcash_address = { git = "https://github.com/hhanh00/librustzcash.git", rev = "ad6cf70a" }
-zcash_encoding = { git = "https://github.com/hhanh00/librustzcash.git",  rev = "ad6cf70a" }
+zcash_keys = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = ["sapling", "orchard", "test-dependencies"] }
+zcash_protocol = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = ["local-consensus"] }
+zcash_client_backend = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = [ "transparent-inputs", "orchard" ] }
+zcash_primitives = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = [ "transparent-inputs" ] }
+zcash_proofs = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7" }
+zcash_address = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7" }
+zcash_encoding = { git = "https://github.com/hhanh00/librustzcash.git",  rev = "be5fa0c7" }
 zcash_note_encryption = "0.4"
 
 [patch.crates-io]
-orchard = { git = "https://github.com/hhanh00/orchard.git", rev = "b6a1e49" }
+orchard = { git = "https://github.com/hhanh00/orchard.git", rev = "820a22e" }
