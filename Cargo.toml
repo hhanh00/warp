@@ -57,7 +57,7 @@ zcash_keys = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa
 zcash_protocol = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = ["local-consensus"] }
 zcash_client_backend = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = [ "transparent-inputs", "orchard" ] }
 zcash_primitives = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = [ "transparent-inputs" ] }
-zcash_proofs = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7" }
+zcash_proofs = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7", features = ["download-params"] }
 zcash_address = { git = "https://github.com/hhanh00/librustzcash.git", rev = "be5fa0c7" }
 zcash_encoding = { git = "https://github.com/hhanh00/librustzcash.git",  rev = "be5fa0c7" }
 zcash_note_encryption = "0.4"
